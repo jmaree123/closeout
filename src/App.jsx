@@ -32,6 +32,7 @@ import Welcome from './components/onboarding/Welcome.jsx';
 // Stores
 import useSettingsStore from './store/settingsStore.js';
 import useItemStore from './store/itemStore.js';
+import { migratePriorities } from './db/database.js';
 
 function App() {
   const [ready, setReady] = useState(false);
@@ -43,6 +44,7 @@ function App() {
   useEffect(() => {
     async function init() {
       await loadSettings();
+      await migratePriorities();
       await loadItems();
       setReady(true);
     }

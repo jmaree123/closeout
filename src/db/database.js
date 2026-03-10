@@ -432,6 +432,28 @@ export async function clearAllItems() {
 }
 
 // ---------------------------------------------------------------------------
+// Migrations
+// ---------------------------------------------------------------------------
+
+const VALID_PRIORITIES = new Set(['Do First', 'Plan Carefully', 'Do When Able', 'Reconsider']);
+
+/**
+ * Recalculate priority for any items that have missing or legacy (P1/P2/P3) values.
+ * Called once on app startup.
+ */
+export async function migratePriorities() {
+  const all = await db.items.toArray();
+  for (const item of all) {
+    if (!item.priority || !VALID_PRIORITIES.has(item.priority)) {
+      const newPriority = calculatePriority(item.effortEstimate, item.riskLevel);
+      if (newPriority) {
+        await db.items.update(item.id, { priority: newPriority });
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
