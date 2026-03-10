@@ -34,6 +34,7 @@ import { translateStatus, translateRiskLevel, translateItemType } from '../../ut
 const COLUMNS = [
   'Open',
   'In Progress',
+  'Pending Approval',
   'Pending Verification',
   'Closed',
   'Cancelled',

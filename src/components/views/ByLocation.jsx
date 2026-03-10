@@ -14,7 +14,7 @@ import { RISK_COLORS, STATUS_COLORS } from '../../utils/riskMatrix.js';
 import { useTranslation } from '../../hooks/useTranslation.js';
 import { translateStatus, translateRiskLevel } from '../../utils/displayLabels.js';
 
-const OPEN_STATUSES = new Set(['Open', 'In Progress', 'Pending Verification']);
+const OPEN_STATUSES = new Set(['Open', 'In Progress', 'Pending Approval', 'Pending Verification']);
 
 export default function ByLocation() {
   const { items, loadItems } = useItemStore();

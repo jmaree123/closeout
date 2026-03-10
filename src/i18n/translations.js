@@ -9,6 +9,7 @@ export const translations = {
     nav_by_person: 'By Person',
     nav_by_department: 'By Department',
     nav_by_location: 'By Location',
+    nav_by_priority: 'By Priority',
     nav_reports: 'Reports',
     nav_settings: 'Settings',
 
@@ -47,6 +48,7 @@ export const translations = {
     // Status display labels (for rendering only — stored values remain English)
     status_open: 'Open',
     status_in_progress: 'In Progress',
+    status_pending_approval: 'Pending Approval',
     status_pending_verification: 'Pending Verification',
     status_closed: 'Closed',
     status_cancelled: 'Cancelled',
@@ -346,12 +348,22 @@ export const translations = {
     loading_activity: 'Loading activity...',
     no_activity_recorded: 'No activity recorded yet.',
 
+    // Priority labels
+    priority_do_first: 'Do First',
+    priority_plan_carefully: 'Plan Carefully',
+    priority_do_when_able: 'Do When Able',
+    priority_reconsider: 'Reconsider',
+    view_by_priority: 'By Priority',
+
     // Status workflow labels
     workflow_move_in_progress: 'Move to In Progress',
     workflow_close_no_action: 'Close (No Action Needed)',
     workflow_cancel: 'Cancel',
+    workflow_submit_approval: 'Submit for Approval',
     workflow_submit_verification: 'Submit for Verification',
     workflow_return_open: 'Return to Open',
+    workflow_approve: 'Approve',
+    workflow_reject_to_progress: 'Reject \u2014 Back to In Progress',
     workflow_mark_verified_close: 'Mark Verified & Close',
     workflow_reject_back: 'Reject \u2014 Back to In Progress',
     workflow_reopen: 'Reopen',
@@ -372,6 +384,7 @@ export const translations = {
     nav_by_person: 'Par personne',
     nav_by_department: 'Par département',
     nav_by_location: 'Par localisation',
+    nav_by_priority: 'Par priorité',
     nav_reports: 'Rapports',
     nav_settings: 'Paramètres',
 
@@ -410,6 +423,7 @@ export const translations = {
     // Status display labels (rendering only)
     status_open: 'Ouvert',
     status_in_progress: 'En cours',
+    status_pending_approval: 'En attente d\'approbation',
     status_pending_verification: 'En attente de vérification',
     status_closed: 'Clôturé',
     status_cancelled: 'Annulé',
@@ -709,12 +723,22 @@ export const translations = {
     loading_activity: 'Chargement de l\'activité...',
     no_activity_recorded: 'Aucune activité enregistrée.',
 
+    // Priority labels
+    priority_do_first: 'Prioritaire',
+    priority_plan_carefully: 'Planifier',
+    priority_do_when_able: 'Quand possible',
+    priority_reconsider: 'Reconsidérer',
+    view_by_priority: 'Par priorité',
+
     // Status workflow labels
     workflow_move_in_progress: 'Passer en cours',
     workflow_close_no_action: 'Clôturer (Aucune action requise)',
     workflow_cancel: 'Annuler',
+    workflow_submit_approval: 'Soumettre à l\'approbation',
     workflow_submit_verification: 'Soumettre à la vérification',
     workflow_return_open: 'Remettre en ouvert',
+    workflow_approve: 'Approuver',
+    workflow_reject_to_progress: 'Rejeter \u2014 Retour en cours',
     workflow_mark_verified_close: 'Marquer vérifié et clôturer',
     workflow_reject_back: 'Rejeter \u2014 Retour en cours',
     workflow_reopen: 'Rouvrir',

@@ -1,7 +1,8 @@
 /**
  * RiskMatrix.jsx
  * Interactive 5x5 risk matrix built with D3.js.
- * Plots non-archived items by likelihood (Y) and consequence (X).
+ * Plots non-archived items by likelihood (X) and consequence (Y).
+ * Highest risk (top-right), lowest risk (bottom-left).
  */
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
@@ -23,10 +24,10 @@ import { isOverdue, formatDate } from '../../utils/dateUtils.js';
 import { useTranslation } from '../../hooks/useTranslation.js';
 import { translateRiskLevel, translateLikelihood, translateConsequence, translateItemType, translateStatus } from '../../utils/displayLabels.js';
 
-// Likelihood top to bottom: Almost Certain (top) → Rare (bottom)
-const LIKELIHOOD_ORDER = [...LIKELIHOOD_OPTIONS];
-// Consequence left to right
-const CONSEQUENCE_ORDER = [...CONSEQUENCE_OPTIONS];
+// X-axis (columns): Likelihood left-to-right: Rare → Almost Certain
+const LIKELIHOOD_X_ORDER = [...LIKELIHOOD_OPTIONS].reverse();
+// Y-axis (rows): Consequence top-to-bottom: Catastrophic → Negligible (highest risk at top)
+const CONSEQUENCE_Y_ORDER = [...CONSEQUENCE_OPTIONS].reverse();
 
 function getTextColor(bgHex) {
   const r = parseInt(bgHex.slice(1, 3), 16);
@@ -110,8 +111,7 @@ export default function RiskMatrix() {
     const container = containerRef.current;
     if (!container) return;
 
-    // Use the actual container dimensions — the container is flex-1 and fills available space
-    const containerWidth = container.clientWidth - 8; // padding
+    const containerWidth = container.clientWidth - 8;
     const availableHeight = Math.max(300, container.clientHeight - 8);
 
     const gap = 2;
@@ -119,7 +119,6 @@ export default function RiskMatrix() {
     const marginBottom = 50;
     const marginTop = 10;
 
-    // Cell size must fit both width and height constraints
     const maxCellFromWidth = Math.floor((containerWidth - marginLeft - 20) / 5);
     const maxCellFromHeight = Math.floor((availableHeight - marginTop - marginBottom - 8) / 5);
     const cellSize = Math.max(60, Math.min(maxCellFromWidth, maxCellFromHeight));
@@ -136,8 +135,8 @@ export default function RiskMatrix() {
 
     // Group items by cell
     const cellMap = {};
-    for (const li of LIKELIHOOD_ORDER) {
-      for (const co of CONSEQUENCE_ORDER) {
+    for (const li of LIKELIHOOD_X_ORDER) {
+      for (const co of CONSEQUENCE_Y_ORDER) {
         cellMap[`${li}|${co}`] = [];
       }
     }
@@ -148,9 +147,9 @@ export default function RiskMatrix() {
 
     const g = svg.append('g').attr('transform', `translate(${marginLeft}, ${marginTop})`);
 
-    // Draw cells
-    LIKELIHOOD_ORDER.forEach((li, row) => {
-      CONSEQUENCE_ORDER.forEach((co, col) => {
+    // Draw cells: rows = consequence (Y), cols = likelihood (X)
+    CONSEQUENCE_Y_ORDER.forEach((co, row) => {
+      LIKELIHOOD_X_ORDER.forEach((li, col) => {
         const x = col * (cellSize + gap);
         const y = row * (cellSize + gap);
         const riskLevel = RISK_MATRIX[li]?.[co] || 'Low';
@@ -180,7 +179,7 @@ export default function RiskMatrix() {
           .attr('opacity', 0.7)
           .text(translateRiskLevel(riskLevel, lang));
 
-        // Plot item dots — scale sizes to cell size
+        // Plot item dots
         const cellItems = cellMap[`${li}|${co}`] || [];
         const dotRadius = cellSize < 80 ? 6 : 8;
         const dotPadding = cellSize < 80 ? 4 : 6;
@@ -268,9 +267,9 @@ export default function RiskMatrix() {
       });
     });
 
-    // Y-axis labels (Likelihood — translated)
+    // Y-axis labels (Consequence — translated)
     const labelFontSize = cellSize < 80 ? '10px' : '12px';
-    LIKELIHOOD_ORDER.forEach((li, row) => {
+    CONSEQUENCE_Y_ORDER.forEach((co, row) => {
       const y = marginTop + row * (cellSize + gap) + cellSize / 2;
       svg
         .append('text')
@@ -282,10 +281,10 @@ export default function RiskMatrix() {
         .attr('font-size', labelFontSize)
         .attr('font-weight', '500')
         .attr('font-family', 'Inter, sans-serif')
-        .text(translateLikelihood(li, lang));
+        .text(translateConsequence(co, lang));
     });
 
-    // Y-axis title
+    // Y-axis title (Consequence)
     svg
       .append('text')
       .attr('x', 10)
@@ -297,10 +296,10 @@ export default function RiskMatrix() {
       .attr('font-size', '12px')
       .attr('font-weight', '600')
       .attr('font-family', 'Inter, sans-serif')
-      .text(t('risk_matrix_likelihood_axis'));
+      .text(t('risk_matrix_consequence_axis'));
 
-    // X-axis labels (Consequence — translated)
-    CONSEQUENCE_ORDER.forEach((co, col) => {
+    // X-axis labels (Likelihood — translated)
+    LIKELIHOOD_X_ORDER.forEach((li, col) => {
       const x = marginLeft + col * (cellSize + gap) + cellSize / 2;
       svg
         .append('text')
@@ -311,10 +310,10 @@ export default function RiskMatrix() {
         .attr('font-size', labelFontSize)
         .attr('font-weight', '500')
         .attr('font-family', 'Inter, sans-serif')
-        .text(translateConsequence(co, lang));
+        .text(translateLikelihood(li, lang));
     });
 
-    // X-axis title
+    // X-axis title (Likelihood)
     svg
       .append('text')
       .attr('x', marginLeft + matrixWidth / 2)
@@ -324,7 +323,7 @@ export default function RiskMatrix() {
       .attr('font-size', '12px')
       .attr('font-weight', '600')
       .attr('font-family', 'Inter, sans-serif')
-      .text(t('risk_matrix_consequence_axis'));
+      .text(t('risk_matrix_likelihood_axis'));
   }, [plottableItems, openDetailPanel, containerSize, t, lang]);
 
   const handleExportPng = useCallback(async () => {

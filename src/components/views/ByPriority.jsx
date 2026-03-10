@@ -1,28 +1,29 @@
 /**
- * ByDepartment.jsx
- * View page: "Items by Department" with Chart / Table toggle.
- * Chart view renders ByDepartmentChart; Table view renders expandable accordion.
+ * ByPriority.jsx
+ * View page: "Items by Priority" with Chart / Table toggle.
+ * Chart view renders ByPriorityChart; Table view renders expandable accordion.
  */
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { BarChart3, Table, ChevronDown, ChevronRight } from 'lucide-react';
 import useItemStore from '../../store/itemStore.js';
 import useUiStore from '../../store/uiStore.js';
-import ByDepartmentChart from '../charts/ByDepartmentChart.jsx';
+import ByPriorityChart from '../charts/ByPriorityChart.jsx';
 import { isOverdue, formatDate, getDaysUntilDue } from '../../utils/dateUtils.js';
-import { RISK_COLORS, STATUS_COLORS } from '../../utils/riskMatrix.js';
+import { RISK_COLORS, STATUS_COLORS, PRIORITY_COLORS } from '../../utils/riskMatrix.js';
 import { useTranslation } from '../../hooks/useTranslation.js';
-import { translateStatus, translateRiskLevel } from '../../utils/displayLabels.js';
+import { translateStatus, translateRiskLevel, translatePriority } from '../../utils/displayLabels.js';
 
 const OPEN_STATUSES = new Set(['Open', 'In Progress', 'Pending Approval', 'Pending Verification']);
+const PRIORITY_ORDER = ['Do First', 'Plan Carefully', 'Do When Able', 'Reconsider'];
 
-export default function ByDepartment() {
+export default function ByPriority() {
   const { items, loadItems } = useItemStore();
   const { openDetailPanel } = useUiStore();
   const { t, lang } = useTranslation();
 
   const [activeTab, setActiveTab] = useState('chart');
-  const [expandedDept, setExpandedDept] = useState(null);
+  const [expandedPriority, setExpandedPriority] = useState(null);
 
   useEffect(() => {
     loadItems();
@@ -30,48 +31,55 @@ export default function ByDepartment() {
 
   const nonArchivedItems = useMemo(() => items.filter((i) => !i.isArchived), [items]);
 
+  // Group all items by priority for the table
   const grouped = useMemo(() => {
     const map = {};
     for (const item of nonArchivedItems) {
-      const dept = item.department || 'Unspecified';
-      if (!map[dept]) {
-        map[dept] = { name: dept, items: [], openCount: 0, overdueCount: 0, nextDue: null };
+      const priority = item.priority || 'Unassigned';
+      if (!map[priority]) {
+        map[priority] = { name: priority, items: [], openCount: 0, overdueCount: 0, nextDue: null };
       }
-      map[dept].items.push(item);
+      map[priority].items.push(item);
       if (OPEN_STATUSES.has(item.status)) {
-        map[dept].openCount += 1;
+        map[priority].openCount += 1;
         if (isOverdue(item.dueDate, item.status)) {
-          map[dept].overdueCount += 1;
+          map[priority].overdueCount += 1;
         }
       }
       if (item.dueDate && OPEN_STATUSES.has(item.status)) {
         const daysUntil = getDaysUntilDue(item.dueDate);
         if (daysUntil !== null) {
-          if (map[dept].nextDue === null || item.dueDate < map[dept].nextDue) {
-            map[dept].nextDue = item.dueDate;
+          if (map[priority].nextDue === null || item.dueDate < map[priority].nextDue) {
+            map[priority].nextDue = item.dueDate;
           }
         }
       }
     }
-    return Object.values(map).sort((a, b) => b.openCount - a.openCount);
+    // Sort: known priorities in order first, then unassigned at the end
+    const result = [];
+    for (const p of PRIORITY_ORDER) {
+      if (map[p]) result.push(map[p]);
+    }
+    if (map['Unassigned']) result.push(map['Unassigned']);
+    return result;
   }, [nonArchivedItems]);
 
   const toggleExpand = useCallback(
     (name) => {
-      setExpandedDept((prev) => (prev === name ? null : name));
+      setExpandedPriority((prev) => (prev === name ? null : name));
     },
     []
   );
 
-  // Display name: translate "Unspecified" if needed
-  const displayName = (name) => (name === 'Unspecified' ? t('view_unspecified') : name);
+  const displayName = (name) => (name === 'Unassigned' ? t('view_unassigned') : translatePriority(name, lang));
 
   return (
     <div className="bg-[#F8F9FA] min-h-screen p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-boronia-navy">{t('view_by_department')}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-boronia-navy">{t('view_by_priority')}</h1>
 
+        {/* Tab toggle */}
         <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden">
           <button
             onClick={() => setActiveTab('chart')}
@@ -98,24 +106,30 @@ export default function ByDepartment() {
         </div>
       </div>
 
+      {/* Content */}
       {activeTab === 'chart' ? (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <ByDepartmentChart items={nonArchivedItems} />
+          <ByPriorityChart items={nonArchivedItems} />
         </div>
       ) : (
         <div className="space-y-1">
           {grouped.map((group) => (
             <div key={group.name} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              {/* Priority header row */}
               <button
                 onClick={() => toggleExpand(group.name)}
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  {expandedDept === group.name ? (
+                  {expandedPriority === group.name ? (
                     <ChevronDown size={16} className="text-gray-400" />
                   ) : (
                     <ChevronRight size={16} className="text-gray-400" />
                   )}
+                  <span
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: PRIORITY_COLORS[group.name] || '#9CA3AF' }}
+                  />
                   <span className="font-medium text-boronia-navy">{displayName(group.name)}</span>
                 </div>
                 <div className="flex items-center gap-6 text-sm">
@@ -138,7 +152,8 @@ export default function ByDepartment() {
                 </div>
               </button>
 
-              {expandedDept === group.name && (
+              {/* Expanded items */}
+              {expandedPriority === group.name && (
                 <div className="border-t border-gray-100">
                   <table className="w-full text-sm">
                     <thead>

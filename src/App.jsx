@@ -19,6 +19,7 @@ import KanbanBoard from './components/kanban/KanbanBoard.jsx';
 import ByPerson from './components/views/ByPerson.jsx';
 import ByDepartment from './components/views/ByDepartment.jsx';
 import ByLocation from './components/views/ByLocation.jsx';
+import ByPriority from './components/views/ByPriority.jsx';
 import ReportBuilder from './components/reports/ReportBuilder.jsx';
 import Settings from './components/settings/Settings.jsx';
 
@@ -75,6 +76,7 @@ function App() {
           <Route path="/by-person" element={<ByPerson />} />
           <Route path="/by-department" element={<ByDepartment />} />
           <Route path="/by-location" element={<ByLocation />} />
+          <Route path="/by-priority" element={<ByPriority />} />
           <Route path="/reports" element={<ReportBuilder />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>

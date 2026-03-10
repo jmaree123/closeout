@@ -14,6 +14,7 @@ import {
   User,
   Building2,
   MapPin,
+  Target,
   FileText,
   Settings,
 } from 'lucide-react';
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { to: '/by-person', labelKey: 'nav_by_person', icon: User },
   { to: '/by-department', labelKey: 'nav_by_department', icon: Building2 },
   { to: '/by-location', labelKey: 'nav_by_location', icon: MapPin },
+  { to: '/by-priority', labelKey: 'nav_by_priority', icon: Target },
   { to: '/reports', labelKey: 'nav_reports', icon: FileText },
   { to: '/settings', labelKey: 'nav_settings', icon: Settings },
 ];

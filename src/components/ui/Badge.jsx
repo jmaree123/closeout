@@ -4,18 +4,12 @@
  *   <Badge variant="status" value="Open" />
  *   <Badge variant="risk" value="Critical" />
  *   <Badge variant="type" value="Project Action" />
- *   <Badge variant="priority" value="P1" />
+ *   <Badge variant="priority" value="Do First" />
  */
 
-import { STATUS_COLORS, RISK_COLORS, TYPE_COLORS } from '../../utils/riskMatrix.js';
+import { STATUS_COLORS, RISK_COLORS, TYPE_COLORS, PRIORITY_COLORS } from '../../utils/riskMatrix.js';
 import { useTranslation } from '../../hooks/useTranslation.js';
-import { translateStatus, translateRiskLevel, translateItemType } from '../../utils/displayLabels.js';
-
-const PRIORITY_COLORS = {
-  P1: '#DC2626',
-  P2: '#F97316',
-  P3: '#3B82F6',
-};
+import { translateStatus, translateRiskLevel, translateItemType, translatePriority } from '../../utils/displayLabels.js';
 
 function getColor(variant, value) {
   switch (variant) {
@@ -40,6 +34,8 @@ function getDisplayLabel(variant, value, lang) {
       return translateRiskLevel(value, lang);
     case 'type':
       return translateItemType(value, lang);
+    case 'priority':
+      return translatePriority(value, lang);
     default:
       return value;
   }

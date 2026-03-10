@@ -4,7 +4,7 @@
  */
 
 import Dexie from 'dexie';
-import { calculateRiskLevel } from '../utils/riskMatrix.js';
+import { calculateRiskLevel, calculatePriority } from '../utils/riskMatrix.js';
 
 // ---------------------------------------------------------------------------
 // Database Setup
@@ -181,7 +181,7 @@ export async function createItem(data) {
     raisedBy: data.raisedBy || '',
     raisedDate: data.raisedDate || now.split('T')[0],
     source: data.source || '',
-    priority: data.priority || '',
+    priority: calculatePriority(data.effortEstimate || 'Medium', riskLevel || 'Medium') || '',
     tags: data.tags || '',
     createdAt: data.createdAt || now,
     updatedAt: now,
@@ -225,6 +225,20 @@ export async function updateItem(id, changes) {
     const newRisk = calculateRiskLevel(updatedLikelihood, updatedConsequence);
     if (newRisk) {
       changes.riskLevel = newRisk;
+    }
+  }
+
+  // Auto-recalculate priority when effort or risk changes
+  const updatedEffort = changes.effortEstimate !== undefined ? changes.effortEstimate : existing.effortEstimate;
+  const updatedRisk = changes.riskLevel !== undefined ? changes.riskLevel : existing.riskLevel;
+  if (
+    changes.effortEstimate !== undefined ||
+    changes.riskLevel !== undefined ||
+    recalcRisk
+  ) {
+    const newPriority = calculatePriority(updatedEffort, updatedRisk);
+    if (newPriority) {
+      changes.priority = newPriority;
     }
   }
 

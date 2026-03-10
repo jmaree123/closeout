@@ -1,45 +1,46 @@
 /**
- * ByLocationChart.jsx
- * Recharts PieChart (donut variant) showing open item count per location.
- * Below the chart: ranked list table with Rank, Location, Open, Overdue, % of Total.
+ * ByPriorityChart.jsx
+ * Recharts PieChart (donut variant) showing item count per priority quadrant.
+ * Below the chart: ranked list table with Rank, Priority, Count, Overdue, % of Total.
  */
 
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PRIORITY_COLORS } from '../../utils/riskMatrix.js';
 import { isOverdue } from '../../utils/dateUtils.js';
 import { useTranslation } from '../../hooks/useTranslation.js';
+import { translatePriority } from '../../utils/displayLabels.js';
 
-const CHART_COLORS = [
-  '#E74C3C', '#9B59B6', '#3498DB', '#2ECC71', '#E67E22',
-  '#1ABC9C', '#F39C12', '#34495E', '#E91E63', '#00BCD4',
-  '#8BC34A', '#FF5722', '#607D8B', '#795548', '#CDDC39',
-];
+const PRIORITY_ORDER = ['Do First', 'Plan Carefully', 'Do When Able', 'Reconsider'];
 
 const OPEN_STATUSES = new Set(['Open', 'In Progress', 'Pending Approval', 'Pending Verification']);
 
-export default function ByLocationChart({ items = [] }) {
-  const { t } = useTranslation();
+export default function ByPriorityChart({ items = [] }) {
+  const { t, lang } = useTranslation();
 
   const data = useMemo(() => {
     const grouped = {};
+    for (const p of PRIORITY_ORDER) {
+      grouped[p] = { name: p, count: 0, overdue: 0 };
+    }
     for (const item of items) {
-      if (!item.isArchived && OPEN_STATUSES.has(item.status)) {
-        const loc = item.location || 'Unspecified';
-        if (!grouped[loc]) grouped[loc] = { name: loc, open: 0, overdue: 0 };
-        grouped[loc].open += 1;
-        if (isOverdue(item.dueDate, item.status)) {
-          grouped[loc].overdue += 1;
+      if (!item.isArchived && item.priority && OPEN_STATUSES.has(item.status)) {
+        if (grouped[item.priority]) {
+          grouped[item.priority].count += 1;
+          if (isOverdue(item.dueDate, item.status)) {
+            grouped[item.priority].overdue += 1;
+          }
         }
       }
     }
-    return Object.values(grouped).sort((a, b) => b.open - a.open);
+    return PRIORITY_ORDER.map((p) => grouped[p]).filter((d) => d.count > 0);
   }, [items]);
 
-  const totalOpen = useMemo(() => data.reduce((sum, d) => sum + d.open, 0), [data]);
+  const totalCount = useMemo(() => data.reduce((sum, d) => sum + d.count, 0), [data]);
 
   const chartData = useMemo(
-    () => data.map((d) => ({ name: d.name === 'Unspecified' ? t('view_unspecified') : d.name, value: d.open })),
-    [data, t]
+    () => data.map((d) => ({ name: translatePriority(d.name, lang), value: d.count, key: d.name })),
+    [data, lang]
   );
 
   if (data.length === 0) {
@@ -66,8 +67,8 @@ export default function ByLocationChart({ items = [] }) {
               paddingAngle={2}
               stroke="none"
             >
-              {chartData.map((_, idx) => (
-                <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+              {chartData.map((entry) => (
+                <Cell key={entry.key} fill={PRIORITY_COLORS[entry.key] || '#9CA3AF'} />
               ))}
             </Pie>
             <Tooltip
@@ -83,7 +84,7 @@ export default function ByLocationChart({ items = [] }) {
         </ResponsiveContainer>
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[28px] font-bold tracking-tight text-boronia-navy">{totalOpen}</span>
+          <span className="text-[28px] font-bold tracking-tight text-boronia-navy">{totalCount}</span>
           <span className="text-xs text-gray-500 font-medium">{t('dashboard_open_items')}</span>
         </div>
       </div>
@@ -94,7 +95,7 @@ export default function ByLocationChart({ items = [] }) {
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-              <th className="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('field_location')}</th>
+              <th className="text-left py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('field_priority')}</th>
               <th className="text-right py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('view_open')}</th>
               <th className="text-right py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('view_overdue')}</th>
               <th className="text-right py-2 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">% {t('view_total')}</th>
@@ -107,20 +108,20 @@ export default function ByLocationChart({ items = [] }) {
                   <div className="flex items-center gap-2">
                     <span
                       className="w-3 h-3 rounded-full inline-block flex-shrink-0"
-                      style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] }}
+                      style={{ backgroundColor: PRIORITY_COLORS[d.name] || '#9CA3AF' }}
                     />
                     {idx + 1}
                   </div>
                 </td>
                 <td className="py-2 px-2 font-medium text-boronia-navy">
-                  {d.name === 'Unspecified' ? t('view_unspecified') : d.name}
+                  {translatePriority(d.name, lang)}
                 </td>
-                <td className="py-2 px-2 text-right font-medium">{d.open}</td>
+                <td className="py-2 px-2 text-right font-medium">{d.count}</td>
                 <td className={`py-2 px-2 text-right font-medium ${d.overdue > 0 ? 'text-red-600' : 'text-gray-400'}`}>
                   {d.overdue}
                 </td>
                 <td className="py-2 px-2 text-right text-gray-500">
-                  {totalOpen > 0 ? ((d.open / totalOpen) * 100).toFixed(1) : '0.0'}%
+                  {totalCount > 0 ? ((d.count / totalCount) * 100).toFixed(1) : '0.0'}%
                 </td>
               </tr>
             ))}

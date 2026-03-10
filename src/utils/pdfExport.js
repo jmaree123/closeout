@@ -36,40 +36,50 @@ const RISK_COLORS_RGB = {
 // Logo Helper — load from /src/assets/ and convert to base64
 // ---------------------------------------------------------------------------
 
-let logoBase64Cache = null;
+let logoCache = null; // { base64, aspectRatio }
 
 /**
  * Load the Boronia Consulting logo as base64 JPEG data.
- * Caches the result after first load.
- * @returns {Promise<string|null>} Base64 data URL or null on failure
+ * Caches the result (including aspect ratio) after first load.
+ * @returns {Promise<{base64: string, aspectRatio: number}|null>} Logo data or null on failure
  */
-export async function getLogoBase64() {
-  if (logoBase64Cache) return logoBase64Cache;
+export async function getLogoData() {
+  if (logoCache) return logoCache;
 
   try {
-    // Use dynamic import with Vite's ?url suffix to get the asset URL
     const logoModule = await import('../assets/boronia_consulting_logo.jpg');
     const logoUrl = logoModule.default;
 
     const response = await fetch(logoUrl);
     const blob = await response.blob();
 
-    return new Promise((resolve) => {
+    const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        logoBase64Cache = reader.result;
-        resolve(logoBase64Cache);
-      };
-      reader.onerror = () => {
-        console.warn('Logo FileReader failed, continuing without logo.');
-        resolve(null);
-      };
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('FileReader failed'));
       reader.readAsDataURL(blob);
     });
+
+    // Get natural dimensions to calculate aspect ratio
+    const aspectRatio = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img.naturalWidth / img.naturalHeight);
+      img.onerror = () => resolve(2.5); // fallback aspect ratio
+      img.src = base64;
+    });
+
+    logoCache = { base64, aspectRatio };
+    return logoCache;
   } catch (err) {
     console.warn('Failed to load logo:', err);
     return null;
   }
+}
+
+/** Legacy compat wrapper */
+export async function getLogoBase64() {
+  const data = await getLogoData();
+  return data ? data.base64 : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,13 +89,15 @@ export async function getLogoBase64() {
 /**
  * Add the small Boronia logo + "CloseOut by Boronia Consulting" to page header.
  */
-function addPageHeader(doc, logoData) {
+function addPageHeader(doc, logoData, logoAspectRatio) {
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Logo (small, top-left)
+  // Logo (small, top-left) — use aspect ratio to avoid distortion
   if (logoData) {
     try {
-      doc.addImage(logoData, 'JPEG', 14, 8, 28, 12);
+      const logoH = 12;
+      const logoW = logoH * (logoAspectRatio || 2.5);
+      doc.addImage(logoData, 'JPEG', 14, 8, logoW, logoH);
     } catch {
       // Silently skip if image fails
     }
@@ -133,11 +145,11 @@ function addSectionHeader(doc, text, y) {
 /**
  * Check if we need a new page and add one if so.
  */
-function checkPageBreak(doc, currentY, needed, logoData) {
+function checkPageBreak(doc, currentY, needed, logoData, logoAspectRatio) {
   const pageHeight = doc.internal.pageSize.getHeight();
   if (currentY + needed > pageHeight - 20) {
     doc.addPage();
-    addPageHeader(doc, logoData);
+    addPageHeader(doc, logoData, logoAspectRatio);
     return 28;
   }
   return currentY;
@@ -153,13 +165,15 @@ function checkPageBreak(doc, currentY, needed, logoData) {
  * @param {object} settings - Project settings
  */
 export async function generateItemPdf(item, settings = {}) {
-  const logoData = await getLogoBase64();
+  const logoInfo = await getLogoData();
+  const logoData = logoInfo ? logoInfo.base64 : null;
+  const logoAspectRatio = logoInfo ? logoInfo.aspectRatio : 2.5;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Header
-  addPageHeader(doc, logoData);
+  addPageHeader(doc, logoData, logoAspectRatio);
 
   let y = 28;
 
@@ -273,7 +287,9 @@ export async function generateReport(items, settings = {}, options = {}, chartIm
     commentary = '',
   } = options;
 
-  const logoData = await getLogoBase64();
+  const logoInfo = await getLogoData();
+  const logoData = logoInfo ? logoInfo.base64 : null;
+  const logoAspectRatio = logoInfo ? logoInfo.aspectRatio : 2.5;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -287,17 +303,19 @@ export async function generateReport(items, settings = {}, options = {}, chartIm
     }
     doc.addPage();
     currentPage++;
-    addPageHeader(doc, logoData);
+    addPageHeader(doc, logoData, logoAspectRatio);
   }
 
   // ---- 1. Cover Page ----
   if (includeCoverPage) {
     currentPage = 1;
 
-    // Centered logo
+    // Centered logo — use aspect ratio for correct proportions
     if (logoData) {
       try {
-        doc.addImage(logoData, 'JPEG', (pageWidth - 60) / 2, 30, 60, 26);
+        const coverLogoH = 26;
+        const coverLogoW = coverLogoH * logoAspectRatio;
+        doc.addImage(logoData, 'JPEG', (pageWidth - coverLogoW) / 2, 30, coverLogoW, coverLogoH);
       } catch {
         // Skip logo on failure
       }
@@ -350,7 +368,7 @@ export async function generateReport(items, settings = {}, options = {}, chartIm
 
     const totalItems = items.length;
     const openItems = items.filter(
-      (i) => i.status === 'Open' || i.status === 'In Progress' || i.status === 'Pending Verification'
+      (i) => i.status === 'Open' || i.status === 'In Progress' || i.status === 'Pending Approval' || i.status === 'Pending Verification'
     ).length;
     const overdueItems = items.filter(
       (i) =>
@@ -558,9 +576,8 @@ export async function generateReport(items, settings = {}, options = {}, chartIm
       columnStyles: {
         1: { cellWidth: 70 },
       },
-      // Auto-paginate built into jspdf-autotable
       didDrawPage: (data) => {
-        addPageHeader(doc, logoData);
+        addPageHeader(doc, logoData, logoAspectRatio);
       },
     });
   }

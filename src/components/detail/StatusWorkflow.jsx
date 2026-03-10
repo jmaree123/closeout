@@ -18,9 +18,14 @@ const TRANSITIONS = {
     { labelKey: 'workflow_cancel', target: 'Cancelled', variant: 'destructive' },
   ],
   'In Progress': [
-    { labelKey: 'workflow_submit_verification', target: 'Pending Verification', variant: 'primary' },
+    { labelKey: 'workflow_submit_approval', target: 'Pending Approval', variant: 'primary' },
+    { labelKey: 'workflow_submit_verification', target: 'Pending Verification', variant: 'secondary' },
     { labelKey: 'workflow_return_open', target: 'Open', variant: 'secondary' },
     { labelKey: 'workflow_cancel', target: 'Cancelled', variant: 'destructive' },
+  ],
+  'Pending Approval': [
+    { labelKey: 'workflow_approve', target: 'Pending Verification', variant: 'primary' },
+    { labelKey: 'workflow_reject_to_progress', target: 'In Progress', variant: 'secondary' },
   ],
   'Pending Verification': [
     { labelKey: 'workflow_mark_verified_close', target: 'Closed', variant: 'primary' },

@@ -26,6 +26,7 @@ export const EFFORT_OPTIONS = ['Low', 'Medium', 'High'];
 export const STATUS_OPTIONS = [
   'Open',
   'In Progress',
+  'Pending Approval',
   'Pending Verification',
   'Closed',
   'Cancelled',
@@ -40,7 +41,37 @@ export const APPROVAL_OPTIONS = [
   'Rejected',
 ];
 
-export const PRIORITY_OPTIONS = ['P1', 'P2', 'P3'];
+export const PRIORITY_OPTIONS = ['Do First', 'Plan Carefully', 'Do When Able', 'Reconsider'];
+
+export const PRIORITY_COLORS = {
+  'Do First': '#DC2626',
+  'Plan Carefully': '#F97316',
+  'Do When Able': '#3B82F6',
+  'Reconsider': '#9CA3AF',
+};
+
+/**
+ * Calculate priority quadrant from effort estimate and risk level.
+ * Maps to the scatter plot quadrants:
+ *   Low effort + High/Critical risk → "Do First"
+ *   Medium/High effort + High/Critical risk → "Plan Carefully"
+ *   Low effort + Low/Medium risk → "Do When Able"
+ *   Medium/High effort + Low/Medium risk → "Reconsider"
+ * @param {string} effortEstimate - 'Low' | 'Medium' | 'High'
+ * @param {string} riskLevel - 'Low' | 'Medium' | 'High' | 'Critical'
+ * @returns {string|null} Priority quadrant label or null if inputs are invalid
+ */
+export function calculatePriority(effortEstimate, riskLevel) {
+  if (!effortEstimate || !riskLevel) return null;
+
+  const highRisk = riskLevel === 'High' || riskLevel === 'Critical';
+  const lowEffort = effortEstimate === 'Low';
+
+  if (lowEffort && highRisk) return 'Do First';
+  if (!lowEffort && highRisk) return 'Plan Carefully';
+  if (lowEffort && !highRisk) return 'Do When Able';
+  return 'Reconsider';
+}
 
 // 5x5 Risk Matrix: RISK_MATRIX[likelihood][consequence] = riskLevel
 export const RISK_MATRIX = {
@@ -92,6 +123,7 @@ export const RISK_COLORS = {
 export const STATUS_COLORS = {
   Open: '#3B82F6',
   'In Progress': '#F59E0B',
+  'Pending Approval': '#EC4899',
   'Pending Verification': '#8B5CF6',
   Closed: '#10B981',
   Cancelled: '#9CA3AF',

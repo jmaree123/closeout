@@ -6,6 +6,7 @@
 import { bulkCreateItems } from '../db/database.js';
 import {
   calculateRiskLevel,
+  calculatePriority,
   LIKELIHOOD_OPTIONS,
   CONSEQUENCE_OPTIONS,
   EFFORT_OPTIONS,
@@ -224,8 +225,8 @@ const CORRECTIVE_ACTIONS = [
 export function generateSeedData(count = 500) {
   const items = [];
 
-  // Status weights: 30% Open, 25% In Progress, 15% Pending Verification, 25% Closed, 5% Cancelled
-  const statusWeights = [30, 25, 15, 25, 5];
+  // Status weights: 25% Open, 20% In Progress, 10% Pending Approval, 15% Pending Verification, 25% Closed, 5% Cancelled
+  const statusWeights = [25, 20, 10, 15, 25, 5];
 
   // Type weights: 50% Project Action, 30% Punch Item, 20% Audit Finding
   const typeWeights = [50, 30, 20];
@@ -292,7 +293,7 @@ export function generateSeedData(count = 500) {
       closeOutNote = 'Cancelled — scope change / no longer applicable.';
     }
 
-    const priority = weightedChoice(['P1', 'P2', 'P3'], [20, 50, 30]);
+    const priority = calculatePriority(effortEstimate, riskLevel) || '';
 
     items.push({
       itemType,

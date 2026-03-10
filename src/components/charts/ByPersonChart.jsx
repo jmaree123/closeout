@@ -15,7 +15,7 @@ const CHART_COLORS = [
   '#8BC34A', '#FF5722', '#607D8B', '#795548', '#CDDC39',
 ];
 
-const OPEN_STATUSES = new Set(['Open', 'In Progress', 'Pending Verification']);
+const OPEN_STATUSES = new Set(['Open', 'In Progress', 'Pending Approval', 'Pending Verification']);
 
 export default function ByPersonChart({ items = [] }) {
   const { t } = useTranslation();

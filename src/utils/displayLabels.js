@@ -9,6 +9,7 @@ export function translateStatus(value, lang = 'en') {
   const map = {
     'Open': s.status_open,
     'In Progress': s.status_in_progress,
+    'Pending Approval': s.status_pending_approval,
     'Pending Verification': s.status_pending_verification,
     'Closed': s.status_closed,
     'Cancelled': s.status_cancelled,
@@ -68,6 +69,17 @@ export function translateItemType(value, lang = 'en') {
     'Project Action': s.type_project_action,
     'Punch Item': s.type_punch_item,
     'Audit Finding': s.type_audit_finding,
+  };
+  return map[value] ?? value;
+}
+
+export function translatePriority(value, lang = 'en') {
+  const s = getStrings(lang);
+  const map = {
+    'Do First': s.priority_do_first,
+    'Plan Carefully': s.priority_plan_carefully,
+    'Do When Able': s.priority_do_when_able,
+    'Reconsider': s.priority_reconsider,
   };
   return map[value] ?? value;
 }

@@ -6,7 +6,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { FileDown, Loader2, CheckSquare, Square } from 'lucide-react';
+import { FileDown, Loader2, CheckSquare, Square, FileX } from 'lucide-react';
 import useItemStore from '../../store/itemStore.js';
 import useSettingsStore from '../../store/settingsStore.js';
 import { generateReport } from '../../utils/pdfExport.js';
@@ -138,6 +138,22 @@ export default function ReportBuilder() {
       setGenerating(false);
     }
   };
+
+  // Empty state when no items exist
+  if (items.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-6">
+        <h1 className="text-2xl font-bold tracking-tight text-boronia-navy mb-6">
+          {t('reports_generate')}
+        </h1>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
+          <FileX size={48} className="text-gray-300 mb-4" />
+          <p className="text-lg font-medium text-gray-500 mb-2">{t('register_no_items')}</p>
+          <p className="text-sm text-gray-400">{t('register_no_items_sub')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-6">

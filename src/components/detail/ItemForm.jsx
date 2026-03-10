@@ -259,14 +259,14 @@ export default function ItemForm({ item, onFieldChange, settings }) {
           />
         </div>
 
-        <Select
-          label={t('field_priority')}
-          options={['', ...PRIORITY_OPTIONS]}
-          value={item.priority}
-          onChange={(v) => onFieldChange('priority', v || '')}
-          placeholder={t('panel_no_priority')}
-          clearable
-        />
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">{t('field_priority')}</label>
+          <div className="flex items-center gap-2">
+            <Badge variant="priority" value={item.priority} />
+            {!item.priority && <span className="text-sm text-gray-400">--</span>}
+            <span className="text-[11px] text-gray-400">{t('panel_auto_calculated')}</span>
+          </div>
+        </div>
       </Section>
 
       {/* 4. Description & Action */}

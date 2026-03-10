@@ -255,7 +255,7 @@ const useItemStore = create((set, get) => ({
   getOpenCount: () => {
     const { items } = get();
     return items.filter(
-      (i) => i.status === 'Open' || i.status === 'In Progress' || i.status === 'Pending Verification'
+      (i) => i.status === 'Open' || i.status === 'In Progress' || i.status === 'Pending Approval' || i.status === 'Pending Verification'
     ).length;
   },
 
