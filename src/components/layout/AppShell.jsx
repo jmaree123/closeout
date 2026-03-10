@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar.jsx';
 import Header from './Header.jsx';
 
-export default function AppShell({ children }) {
+export default function AppShell({ children, onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function AppShell({ children }) {
   return (
     <div className="h-screen bg-[#F8F9FA] overflow-hidden">
       <Sidebar collapsed={collapsed} />
-      <Header sidebarCollapsed={collapsed} />
+      <Header sidebarCollapsed={collapsed} onLogout={onLogout} />
       <main
         className={`pt-14 h-screen transition-all duration-200 ${
           collapsed ? 'pl-16' : 'pl-60'

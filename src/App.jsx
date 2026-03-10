@@ -2,10 +2,15 @@
  * App.jsx — CloseOut application root.
  * Wires HashRouter, layout shell, all routes, and global overlays.
  * Loads settings + items on mount; shows onboarding if not yet complete.
+ * Gates the entire app behind Supabase authentication.
  */
 
 import { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// Auth
+import { supabase } from './lib/supabase.js';
+import LoginScreen from './components/auth/LoginScreen.jsx';
 
 // Layout
 import AppShell from './components/layout/AppShell.jsx';
@@ -35,13 +40,37 @@ import useItemStore from './store/itemStore.js';
 import { migratePriorities } from './db/database.js';
 
 function App() {
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [ready, setReady] = useState(false);
 
+  // ── Auth: check existing session + listen for changes ──
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // ── App data loading (only when authenticated) ──
   const loadSettings = useSettingsStore((s) => s.loadSettings);
   const settings = useSettingsStore((s) => s.settings);
   const loadItems = useItemStore((s) => s.loadItems);
 
   useEffect(() => {
+    if (!session) return;
     async function init() {
       await loadSettings();
       await migratePriorities();
@@ -49,9 +78,25 @@ function App() {
       setReady(true);
     }
     init();
-  }, [loadSettings, loadItems]);
+  }, [session, loadSettings, loadItems]);
 
-  // Show nothing until data is loaded
+  // ── Render gates ──
+
+  // 1. Waiting for auth check
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#F8F9FA]">
+        <p className="text-boronia-navy text-sm font-medium">Loading...</p>
+      </div>
+    );
+  }
+
+  // 2. Not logged in → show login screen
+  if (!session) {
+    return <LoginScreen />;
+  }
+
+  // 3. Logged in but data still loading
   if (!ready) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#F8F9FA]">
@@ -67,7 +112,7 @@ function App() {
       {/* Onboarding overlay — shown before anything else on first launch */}
       {!onboardingComplete && <Welcome />}
 
-      <AppShell>
+      <AppShell onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />

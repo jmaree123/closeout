@@ -36,7 +36,7 @@ const useItemStore = create((set, get) => ({
   // Actions — data
   // -----------------------------------------------------------------------
 
-  /** Load all non-archived items from Dexie into state. */
+  /** Load all non-archived items from the database into state. */
   loadItems: async () => {
     const items = await getAllItems();
     set({ items });

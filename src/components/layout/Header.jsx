@@ -4,7 +4,7 @@
  */
 
 import { useLocation } from 'react-router-dom';
-import { Plus, Upload, Download } from 'lucide-react';
+import { Plus, Upload, Download, LogOut } from 'lucide-react';
 import useUiStore from '../../store/uiStore.js';
 import useItemStore from '../../store/itemStore.js';
 import useSettingsStore from '../../store/settingsStore.js';
@@ -24,7 +24,7 @@ const ROUTE_NAME_KEYS = {
   '/settings': 'nav_settings',
 };
 
-export default function Header({ sidebarCollapsed }) {
+export default function Header({ sidebarCollapsed, onLogout }) {
   const { pathname } = useLocation();
   const openQuickAdd = useUiStore((s) => s.openQuickAdd);
   const openImportWizard = useUiStore((s) => s.openImportWizard);
@@ -74,6 +74,18 @@ export default function Header({ sidebarCollapsed }) {
         >
           <Download size={16} />
           {t('btn_export')}
+        </button>
+
+        {/* Divider */}
+        <div className="w-px h-6 bg-gray-200 mx-1" />
+
+        <button
+          onClick={onLogout}
+          className="inline-flex items-center gap-1.5 text-gray-500 hover:text-red-600 text-sm font-medium rounded-md px-3 py-2 transition-colors"
+          title="Sign Out"
+        >
+          <LogOut size={16} />
+          <span className="hidden sm:inline">Sign Out</span>
         </button>
       </div>
     </header>

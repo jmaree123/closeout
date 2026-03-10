@@ -20,7 +20,7 @@ const useSettingsStore = create((set, get) => ({
   // Actions
   // -----------------------------------------------------------------------
 
-  /** Load settings from Dexie, initialising defaults if needed. */
+  /** Load settings from the database, initialising defaults if needed. */
   loadSettings: async () => {
     const settings = await initializeSettings();
     set({ settings });

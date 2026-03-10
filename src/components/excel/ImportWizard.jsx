@@ -39,16 +39,16 @@ const TARGET_FIELDS = [
   { value: 'itemId', label: 'Item ID' },
   { value: 'title', label: 'Title *' },
   { value: 'description', label: 'Description' },
-  { value: 'department', label: 'Department *' },
+  { value: 'department', label: 'Department' },
   { value: 'location', label: 'Location' },
   { value: 'consequence', label: 'Consequence' },
   { value: 'likelihood', label: 'Likelihood' },
   { value: 'riskLevel', label: 'Risk Level' },
   { value: 'effortEstimate', label: 'Effort Estimate' },
   { value: 'effortHours', label: 'Effort Hours' },
-  { value: 'dueDate', label: 'Due Date *' },
-  { value: 'assignedTo', label: 'Assigned To *' },
-  { value: 'status', label: 'Status *' },
+  { value: 'dueDate', label: 'Due Date' },
+  { value: 'assignedTo', label: 'Assigned To' },
+  { value: 'status', label: 'Status' },
   { value: 'correctiveAction', label: 'Corrective Action' },
   { value: 'verificationPerson', label: 'Verification Person' },
   { value: 'verificationDate', label: 'Verification Date' },
@@ -59,7 +59,7 @@ const TARGET_FIELDS = [
   { value: 'source', label: 'Source' },
 ];
 
-const REQUIRED_FIELDS = ['title', 'dueDate', 'assignedTo', 'department', 'status'];
+const REQUIRED_FIELDS = ['title'];
 
 export default function ImportWizard() {
   const importWizardOpen = useUiStore((s) => s.importWizardOpen);
@@ -452,7 +452,7 @@ export default function ImportWizard() {
               {!requiredMapped && (
                 <p className="mt-3 text-xs text-amber-600 flex items-center gap-1">
                   <AlertTriangle size={14} />
-                  Required fields must be mapped: Title, Due Date, Assigned To, Department, Status
+                  Required field must be mapped: Title
                 </p>
               )}
             </div>
