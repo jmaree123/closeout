@@ -136,6 +136,7 @@ export default function ItemGrid() {
       {
         id: 'select',
         size: 40,
+        meta: { align: 'center' },
         header: () => (
           <input
             type="checkbox"
@@ -161,7 +162,7 @@ export default function ItemGrid() {
       {
         accessorKey: 'itemId',
         header: t('field_item_id'),
-        size: 100,
+        size: 90,
         cell: ({ row }) => (
           <Badge variant="type" value={row.original.itemId} />
         ),
@@ -169,17 +170,25 @@ export default function ItemGrid() {
       {
         accessorKey: 'title',
         header: t('field_title'),
-        size: 280,
-        cell: ({ getValue }) => (
-          <span className="text-[13px] font-medium text-gray-800 truncate block">
-            {getValue() || 'Untitled'}
-          </span>
-        ),
+        size: 260,
+        meta: { allowWrap: true },
+        cell: ({ getValue }) => {
+          const val = getValue() || 'Untitled';
+          return (
+            <span
+              className="text-[13px] font-medium text-gray-800 truncate block"
+              title={val}
+            >
+              {val}
+            </span>
+          );
+        },
       },
       {
         accessorKey: 'status',
         header: t('field_status'),
-        size: 150,
+        size: 140,
+        meta: { align: 'center' },
         cell: ({ row }) => (
           <StatusCell
             item={row.original}
@@ -192,12 +201,13 @@ export default function ItemGrid() {
         accessorKey: 'riskLevel',
         header: t('field_risk'),
         size: 100,
+        meta: { align: 'center' },
         cell: ({ getValue }) => <Badge variant="risk" value={getValue()} />,
       },
       {
         accessorKey: 'assignedTo',
         header: t('field_assigned_to'),
-        size: 140,
+        size: 150,
         cell: ({ getValue }) => (
           <span className="text-[13px] text-gray-600 truncate block">
             {getValue() || '--'}
@@ -207,7 +217,7 @@ export default function ItemGrid() {
       {
         accessorKey: 'department',
         header: t('field_department'),
-        size: 130,
+        size: 140,
         cell: ({ getValue }) => (
           <span className="text-[13px] text-gray-600 truncate block">
             {getValue() || '--'}
@@ -242,13 +252,14 @@ export default function ItemGrid() {
       {
         accessorKey: 'itemType',
         header: t('field_item_type'),
-        size: 120,
+        size: 140,
         cell: ({ getValue }) => <Badge variant="type" value={getValue()} />,
       },
       {
         accessorKey: 'priority',
         header: t('field_priority'),
-        size: 80,
+        size: 140,
+        meta: { align: 'center' },
         cell: ({ getValue }) => {
           const v = getValue();
           return v ? <Badge variant="priority" value={v} /> : <span className="text-gray-300">--</span>;
@@ -257,7 +268,7 @@ export default function ItemGrid() {
       {
         accessorKey: 'location',
         header: t('field_location'),
-        size: 120,
+        size: 130,
         cell: ({ getValue }) => (
           <span className="text-[13px] text-gray-600 truncate block">
             {getValue() || '--'}
@@ -334,7 +345,7 @@ export default function ItemGrid() {
         ref={tableContainerRef}
         className="flex-1 overflow-auto bg-white"
       >
-        <table className="w-full border-collapse" role="grid">
+        <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }} role="grid">
           {/* Sticky header */}
           <thead className="sticky top-0 z-10 bg-gray-50 border-b-2 border-gray-200">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -342,17 +353,22 @@ export default function ItemGrid() {
                 {headerGroup.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   const sorted = header.column.getIsSorted();
+                  const align = header.column.columnDef.meta?.align || 'left';
                   return (
                     <th
                       key={header.id}
                       role="columnheader"
                       onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                      className={`text-left text-[11px] font-semibold tracking-wider uppercase text-gray-500 px-3 h-10 whitespace-nowrap ${
+                      className={`text-[11px] font-semibold tracking-wider uppercase text-gray-500 px-3 h-10 whitespace-nowrap ${
                         canSort ? 'cursor-pointer select-none hover:text-gray-700' : ''
                       }`}
-                      style={{ width: header.getSize() }}
+                      style={{
+                        width: header.getSize(),
+                        textAlign: align,
+                        verticalAlign: 'middle',
+                      }}
                     >
-                      <div className="flex items-center gap-1">
+                      <div className={`flex items-center gap-1 ${align === 'center' ? 'justify-center' : ''}`}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {canSort && sorted === 'asc' && <ChevronUp size={12} />}
                         {canSort && sorted === 'desc' && <ChevronDown size={12} />}
@@ -400,22 +416,27 @@ export default function ItemGrid() {
                       : '4px solid transparent',
                   }}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      role="gridcell"
-                      className="px-3 py-0"
-                      style={{
-                        width: cell.column.getSize(),
-                        height: `${virtualRow.size}px`,
-                        verticalAlign: 'middle',
-                      }}
-                    >
-                      <div className="flex items-center h-full">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
-                    </td>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const align = cell.column.columnDef.meta?.align || 'left';
+                    const allowWrap = cell.column.columnDef.meta?.allowWrap;
+                    return (
+                      <td
+                        key={cell.id}
+                        role="gridcell"
+                        className={`px-3 py-0 ${allowWrap ? '' : 'whitespace-nowrap'} overflow-hidden`}
+                        style={{
+                          width: cell.column.getSize(),
+                          height: `${virtualRow.size}px`,
+                          verticalAlign: 'middle',
+                          textAlign: align,
+                        }}
+                      >
+                        <div className={`flex items-center h-full ${align === 'center' ? 'justify-center' : ''}`}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })}
