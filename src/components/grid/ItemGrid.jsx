@@ -346,10 +346,16 @@ export default function ItemGrid() {
         className="flex-1 overflow-auto bg-white"
       >
         <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }} role="grid">
+          {/* Colgroup to enforce column widths for both header and body */}
+          <colgroup>
+            {table.getAllColumns().map((col) => (
+              <col key={col.id} style={{ width: col.getSize() }} />
+            ))}
+          </colgroup>
           {/* Sticky header */}
           <thead className="sticky top-0 z-10 bg-gray-50 border-b-2 border-gray-200">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} role="row">
+              <tr key={headerGroup.id} role="row" style={{ display: 'flex', width: '100%' }}>
                 {headerGroup.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   const sorted = header.column.getIsSorted();
@@ -364,6 +370,9 @@ export default function ItemGrid() {
                       }`}
                       style={{
                         width: header.getSize(),
+                        minWidth: header.getSize(),
+                        maxWidth: header.getSize(),
+                        flex: 'none',
                         textAlign: align,
                         verticalAlign: 'middle',
                       }}
@@ -403,6 +412,7 @@ export default function ItemGrid() {
                     hover:bg-gray-100
                   `}
                   style={{
+                    display: 'flex',
                     position: 'absolute',
                     top: 0,
                     left: 0,
@@ -426,6 +436,9 @@ export default function ItemGrid() {
                         className={`px-3 py-0 ${allowWrap ? '' : 'whitespace-nowrap'} overflow-hidden`}
                         style={{
                           width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize(),
+                          flex: 'none',
                           height: `${virtualRow.size}px`,
                           verticalAlign: 'middle',
                           textAlign: align,
